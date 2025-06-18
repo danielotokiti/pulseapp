@@ -2,33 +2,28 @@ document.getElementById('ttc-form').addEventListener('submit', function (e) {
   e.preventDefault();
 
   const route = document.getElementById('route').value.trim();
-  const stopId = document.getElementById('stopId').value.trim();
+  const stop = document.getElementById('stop').value.trim();
   const resultsDiv = document.getElementById('results');
+
   resultsDiv.innerHTML = 'Loading...';
 
-  const apiUrl = `https://retro.umoiq.com/service/publicXMLFeed?command=predictions&a=ttc&routeTag=${route}&stopId=${stopId}`;
+  const url = `https://www.transsee.ca/api/getNextBus?agency=ttc&route=${route}&stop=${stop}`;
 
-  fetch(apiUrl)
-    .then(response => response.text())
-    .then(str => {
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(str, "application/xml");
-      const predictions = xml.getElementsByTagName("prediction");
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      const predictions = data?.nextbus?.[0]?.times;
 
-      if (predictions.length === 0) {
-        resultsDiv.innerHTML = "<p>No upcoming vehicles found. Please check your route and stop ID.</p>";
+      if (!predictions || predictions.length === 0) {
+        resultsDiv.innerHTML = '<p>No upcoming vehicles found. Double-check the route and stop ID.</p>';
         return;
       }
 
-      const times = Array.from(predictions).map(p =>
-        `${p.getAttribute("minutes")} min`
-      );
-
-      resultsDiv.innerHTML = `
-        <p><strong>Next arrivals:</strong> ${times.join(", ")}</p>
-      `;
+      const formatted = predictions.map(min => `${min} min`).join(', ');
+      resultsDiv.innerHTML = `<p><strong>Next ${route} arrivals at stop ${stop}:</strong> ${formatted}</p>`;
     })
-    .catch(() => {
-      resultsDiv.innerHTML = "<p>Error fetching TTC data. Try again later.</p>";
+    .catch(err => {
+      console.error(err);
+      resultsDiv.innerHTML = '<p>Error fetching data. Try again later.</p>';
     });
 });
