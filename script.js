@@ -1,33 +1,34 @@
-async function getPredictions() {
+document.getElementById('ttc-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+
   const route = document.getElementById('route').value.trim();
-  const stop = document.getElementById('stop').value.trim();
+  const stopId = document.getElementById('stopId').value.trim();
   const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = 'Loading...';
 
-  if (!route || !stop) {
-    resultsDiv.innerHTML = '<p>Please enter both route and stop ID.</p>';
-    return;
-  }
+  const apiUrl = `https://retro.umoiq.com/service/publicXMLFeed?command=predictions&a=ttc&routeTag=${route}&stopId=${stopId}`;
 
-  resultsDiv.innerHTML = '<p>Loading...</p>';
+  fetch(apiUrl)
+    .then(response => response.text())
+    .then(str => {
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(str, "application/xml");
+      const predictions = xml.getElementsByTagName("prediction");
 
-  try {
-    const url = `https://retro.umoiq.com/service/publicJSONFeed?command=predictions&a=ttc&r=${route}&s=${stop}`;
-    const response = await fetch(url);
-    const data = await response.json();
+      if (predictions.length === 0) {
+        resultsDiv.innerHTML = "<p>No upcoming vehicles found. Please check your route and stop ID.</p>";
+        return;
+      }
 
-    if (data.predictions?.direction?.length > 0) {
-      const predictions = data.predictions.direction[0].prediction;
-      let output = `<h3>Next Arrivals for Route ${route}</h3><ul>`;
-      predictions.forEach(p => {
-        output += `<li>In ${p.minutes} min (${p.seconds} seconds)</li>`;
-      });
-      output += '</ul>';
-      resultsDiv.innerHTML = output;
-    } else {
-      resultsDiv.innerHTML = '<p>No upcoming vehicles found.</p>';
-    }
-  } catch (err) {
-    console.error(err);
-    resultsDiv.innerHTML = '<p>Error fetching data. Please try again.</p>';
-  }
-}
+      const times = Array.from(predictions).map(p =>
+        `${p.getAttribute("minutes")} min`
+      );
+
+      resultsDiv.innerHTML = `
+        <p><strong>Next arrivals:</strong> ${times.join(", ")}</p>
+      `;
+    })
+    .catch(() => {
+      resultsDiv.innerHTML = "<p>Error fetching TTC data. Try again later.</p>";
+    });
+});
