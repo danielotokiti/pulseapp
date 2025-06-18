@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head> <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulse App – TTC Live Arrival Times</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+    }
+    #results {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pulse App</h1>
+  <p>Enter TTC route and stop ID to get live arrival times</p>
+
+  <input type="text" id="route" placeholder="Route (e.g. 29)" />
+  <input type="text" id="stop" placeholder="Stop ID (e.g. 8350)" />
+  <button onclick="getPredictions()">Check Times</button>
+
+  <div id="results"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
